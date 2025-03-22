@@ -1,44 +1,44 @@
-name: generate animation
+name: Generate Snake
 
+# Controls when the action will run
 on:
-  # run automatically every 24 hours
   schedule:
-    - cron: "0 */24 * * *" 
-  
-  # allows to manually run the job at any time
+    # Every 6 hours
+    - cron: "0 */6 * * *"
   workflow_dispatch:
-  
-  # run on every push on the master branch
-  push:
-    branches:
-    - master
-    
-  
 
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
+
     steps:
-      # generates a snake game from a github user (<github_user_name>) contributions graph, output a svg animation at <svg_out_path>
-      - name: generate github-contribution-grid-snake.svg
-        uses: Platane/snk/svg-only@v3
+      # Checks out the repo so the action can access it
+      - uses: actions/checkout@v2
+      
+      # Generates the snake contribution graph
+      - uses: Platane/snk@v1.0.0  # Use a stable version instead of master
+        id: snake-gif
         with:
           github_user_name: emir-efe
-          outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-          
-      # push the content of <build_dir> to a branch
-      # the content will be available at https://raw.githubusercontent.com/<github_user>/<repository>/<target_branch>/<file> , or as github page
-      - name: push github-contribution-grid-snake.svg to the output branch
-        uses: crazy-max/ghaction-github-pages@v3.1.0
+          gif_out_path: dist/github-contribution-grid-snake.gif
+          svg_out_path: dist/github-contribution-grid-snake.svg
+
+      # Show the status of the build (for debugging)
+      - run: git status
+
+      # Commit and push the changes
+      - name: Push changes to output branch
+        uses: ad-m/github-push-action@v0.6.0  # Pin the version for stability
         with:
-          target_branch: output
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: output  # Pushing to the output branch, not master
+          force: true
+
+      # Deploy to GitHub Pages (output branch)
+      - name: Deploy to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v2.1.3
+        with:
+          target_branch: output  # The output branch for GitHub Pages
           build_dir: dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
